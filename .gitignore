@@ -15,5 +15,9 @@ hs_err_pid*
 
 .project
 .classpath
+<<<<<<< HEAD
 .settings
 .settings/
+=======
+.settings
+>>>>>>> 1584e5bdaa8fcf01856823f363a432ca90ebead5
