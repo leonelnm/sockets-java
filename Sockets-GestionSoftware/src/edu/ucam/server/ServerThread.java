@@ -23,6 +23,7 @@ public class ServerThread extends Thread {
 	private User user;
 
 	public ServerThread(Socket socket) throws IOException {
+		logger.info("Client connected -> " + this.getId());
 		this.socket = socket;
 		initializeBuffers(this.socket);
 		this.user = new User();

@@ -12,8 +12,16 @@ public class Client implements Serializable {
 	private String name;
 	private String lastname;
 	
-	public Client(String name, String lastname) {
+	public Client() {
 		this.id = counter.incrementAndGet();
+	}
+	
+	public Client(int id) {
+		this.id = id;
+	}
+	
+	public Client(String name, String lastname) {
+		this();
 		this.name = name;
 		this.lastname = lastname;
 	}

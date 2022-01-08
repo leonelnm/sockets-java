@@ -93,44 +93,12 @@ public class ProtocolManagement implements IProtocolManagement {
 		case LISTCLIENTES:
 		case ADDPRODUCTO:
 		case LISTPRODUCTOS:
+		case UPDATECLIENTE:
+		case UPDATEPRODUCTO:
+		case GETCLIENTE:
+		case GETPRODUCTO:
 			port = openDataChannel(commandChannel, request);
 			sendPreOK(request, commandChannel, port);
-			break;
-			
-		case UPDATECLIENTE:
-			if(clientRepo.existById(request.getExtraData())) {
-				port = openDataChannel(commandChannel, request);
-				sendPreOK(request, commandChannel, port);				
-			}else {
-				sendMessage(Messages.FAILED, request, Messages.COD_NOT_FOUND, "Client dont found", commandChannel.getPw());
-			}
-			break;
-			
-		case UPDATEPRODUCTO:
-			if(productRepo.existById(request.getExtraData())) {
-				port = openDataChannel(commandChannel, request);
-				sendPreOK(request, commandChannel, port);				
-			}else {
-				sendMessage(Messages.FAILED, request, Messages.COD_NOT_FOUND, "Product dont found", commandChannel.getPw());
-			}
-			break;
-			
-		case GETCLIENTE:
-			if(clientRepo.existById(Integer.parseInt(request.getExtraData()))) {
-				port = openDataChannel(commandChannel, request);
-				sendPreOK(request, commandChannel, port);				
-			}else {
-				sendMessage(Messages.FAILED, request, Messages.COD_NOT_FOUND, "Client dont found", commandChannel.getPw());
-			}
-			break;
-			
-		case GETPRODUCTO:
-			if(productRepo.existById(Integer.parseInt(request.getExtraData()))) {
-				port = openDataChannel(commandChannel, request);
-				sendPreOK(request, commandChannel, port);				
-			}else {
-				sendMessage(Messages.FAILED, request, Messages.COD_NOT_FOUND, "Product dont found", commandChannel.getPw());
-			}
 			break;
 			
 		case REMOVECLIENTE:
@@ -175,62 +143,60 @@ public class ProtocolManagement implements IProtocolManagement {
 		switch (request.getCommand()) {
 		case ADDCLIENTE:
 			client = (Client) dataChannel.readObject();
-			if(client != null) {
-				if(clientRepo.existById(client.getId())) {
-					sendMessage(Messages.FAILED, request, Messages.COD_DUPLICATED, "Client duplicated", commandChannel.getPw());
-				}else {
-					clientRepo.save(client);					
-					sendTransferOK(request, commandChannel);
-				}
-			} else {
+			if(client == null) {
 				sendInvalidData(request, commandChannel);
+			}else if(clientRepo.existById(client.getId())) {
+				sendMessage(Messages.FAILED, request, Messages.COD_DUPLICATED, "Client duplicated", commandChannel.getPw());
+			}else {
+				clientRepo.save(client);					
+				sendTransferOK(request, commandChannel);
 			}
 			break;
 			
 			
 		case ADDPRODUCTO:
 			product = (Product) dataChannel.readObject();
-			if(product != null) {
-				if(productRepo.existById(product.getId())) {
-					sendMessage(Messages.FAILED, request, Messages.COD_DUPLICATED, "Product duplicated", commandChannel.getPw());
-				}else {
-					productRepo.save(product);					
-					sendTransferOK(request, commandChannel);
-				}
-			} else {
+			if(product == null) {
 				sendInvalidData(request, commandChannel);
+			}else if(productRepo.existById(product.getId())) {
+				sendMessage(Messages.FAILED, request, Messages.COD_DUPLICATED, "Product duplicated", commandChannel.getPw());
+			}else {
+				productRepo.save(product);					
+				sendTransferOK(request, commandChannel);
 			}
 			break;
 			
 			
 		case UPDATECLIENTE:
 			client = (Client) dataChannel.readObject();
-			if(client != null) {
-				if(Integer.parseInt(request.getExtraData()) == client.getId()){
-					clientRepo.update(Integer.parseInt(request.getExtraData()), client);
-					sendTransferOK(request, commandChannel);
-				} else {
-					msg = "Expected client id: " + request.getExtraData() + " received id: " + client.getId();
-					sendMessage(Messages.FAILED, request, Messages.COD_UNEXPECTED, msg, commandChannel.getPw());
-				}
-			}else {
+			if(client == null) {
 				sendInvalidData(request, commandChannel);
+			}else if(Integer.parseInt(request.getExtraData()) != client.getId()){
+				msg = "Expected client id: " + request.getExtraData() + " received id: " + client.getId();
+				sendMessage(Messages.FAILED, request, Messages.COD_UNEXPECTED, msg, commandChannel.getPw());
+			}else if(!clientRepo.existById(client.getId())) {
+				msg = "Client " + client.getId() + " dont found";
+				sendMessage(Messages.FAILED, request, Messages.COD_NOT_FOUND, msg, commandChannel.getPw());
+			} else {
+				clientRepo.update(Integer.parseInt(request.getExtraData()), client);
+				sendTransferOK(request, commandChannel);
 			}
 				
 			break;
 			
 		case UPDATEPRODUCTO:
 			product = (Product) dataChannel.readObject();
-			if(product != null) {
-				if(Integer.parseInt(request.getExtraData()) == product.getId()){
-					productRepo.update(Integer.parseInt(request.getExtraData()), product);
-					sendTransferOK(request, commandChannel);
-				} else {
-					msg = "Expected product id: " + request.getExtraData() + " received id: " + product.getId();
-					sendMessage(Messages.FAILED, request, Messages.COD_UNEXPECTED, msg, commandChannel.getPw());
-				}
-			}else {
+			if(product == null) {
 				sendInvalidData(request, commandChannel);
+			}else if(Integer.parseInt(request.getExtraData()) != product.getId()){
+				msg = "Expected product id: " + request.getExtraData() + " received id: " + product.getId();
+				sendMessage(Messages.FAILED, request, Messages.COD_UNEXPECTED, msg, commandChannel.getPw());
+			}else if(!productRepo.existById(product.getId())) {
+				msg = "Product " + product.getId() + " dont found";
+				sendMessage(Messages.FAILED, request, Messages.COD_NOT_FOUND, msg, commandChannel.getPw());
+			} else {
+				productRepo.update(Integer.parseInt(request.getExtraData()), product);
+				sendTransferOK(request, commandChannel);
 			}
 				
 			break;

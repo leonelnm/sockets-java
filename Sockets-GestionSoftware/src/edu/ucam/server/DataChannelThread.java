@@ -28,11 +28,11 @@ public class DataChannelThread extends Thread {
 	public void run() {
 		
 		try(ServerSocket dataServerSocket = new ServerSocket(this.port)){
-			dataServerSocket.setSoTimeout(30000);
+			dataServerSocket.setSoTimeout(45000);
 			
 			System.out.println("ServerSocket Data waiting by client at: " + this.port);
 			socket = dataServerSocket.accept();
-			System.out.println("Client connected!");
+			System.out.println("Client connected on DataChannel!");
 			initializeBuffers(socket);
 			
 			new ProtocolManagement().managementData(request, commandChannel, this);
