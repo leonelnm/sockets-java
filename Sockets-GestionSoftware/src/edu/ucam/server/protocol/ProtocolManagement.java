@@ -302,13 +302,13 @@ public class ProtocolManagement implements IProtocolManagement {
 		pw.println(joiner.toString());
 		pw.flush();
 		
-		System.out.println("out: " + joiner.toString());
+		System.out.println("OUT -> " + joiner.toString());
 
 	}
 	
 	private void sendPreOK(CommandRequest request, ServerThread commandChannel, int port) {
 
-		String ip = commandChannel.getSocket().getInetAddress().toString().substring(1);
+		String ip = commandChannel.getCommandSocket().getInetAddress().toString().substring(1);
 		
 		StringJoiner joiner = new StringJoiner(" ");
 		joiner
@@ -320,8 +320,8 @@ public class ProtocolManagement implements IProtocolManagement {
 		
 		commandChannel.getPw().println(joiner.toString());
 		commandChannel.getPw().flush();
-		
-		System.out.println("out: " + joiner.toString());
+
+		System.out.println("OUT ("+ commandChannel.getId() +") -> " + joiner.toString());
 	}
 	
 	private void sendTransferOK(CommandRequest request, ServerThread commandChannel) {

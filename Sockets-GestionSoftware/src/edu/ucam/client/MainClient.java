@@ -30,14 +30,19 @@ public class MainClient {
 	private User user;
 	private boolean menuClient = false;
 	private boolean menuProduct = false;
+	private ClientKeepAliveThread keepAliveThread;
 	
 	public void ejecutar(){
 		
 		try (Socket socket = new Socket("localhost", PortsUtils.COMMAND_PORT)){
-			user = new User();
 			
+			this.user = new User();
 			this.br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			this.pw = new PrintWriter(socket.getOutputStream());
+			
+			// Open KeepAlive
+			ClientKeepAliveThread keepAlive = new ClientKeepAliveThread(this);
+			keepAlive.start();
 			
 			Scanner sc = new Scanner(System.in);
 			Socket dataChannel = null;
@@ -208,7 +213,7 @@ public class MainClient {
 						break;
 						
 					case UPDATEPRODUCTO:
-						System.out.println("\nActualizar Productp");
+						System.out.println("\nActualizar Producto");
 						System.out.println("Inserte ID de producto para actualizar: ");
 						readed = sc.nextLine();
 						idTemp = Integer.parseInt(readed);
@@ -308,20 +313,28 @@ public class MainClient {
 							System.out.println("Volver a intentar");
 						}
 						break;
+						
+					case CONECTADOS:
+						pw.println(command.name());
+						pw.flush();
+						System.out.println("\tClientes conectados -> " + br.readLine());
+						break;
 					default:
-						System.out.println("No implementado");
+						if(!Command.EXIT.equals(command)) {
+							System.out.println("No implementado");
+						}
 						break;
 					}
 				}
 			}
 			
 			sendComand(new CommandRequest(Command.EXIT));
+			this.keepAliveThread.interruptKeepAlive();
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("Error " + e.getMessage());
 		} catch (ClassNotFoundException e) {
 			System.err.println("Error al leer object " + e.getMessage());
-			e.printStackTrace();
 		}
 		
 	}
@@ -384,6 +397,8 @@ public class MainClient {
 			break;
 		case 0:
 			return Command.EXIT;
+		case 3:
+			return Command.CONECTADOS;
 		default:
 			System.out.println("\nOpción no disponible!!!");
 			break;
@@ -422,6 +437,10 @@ public class MainClient {
 		case 7:
 			this.menuClient = false;
 			this.menuProduct = false;
+			break;
+			
+		case 10:
+			command = Command.CONECTADOS;
 			break;
 
 		default:
@@ -463,6 +482,10 @@ public class MainClient {
 			this.menuClient = false;
 			this.menuProduct = false;
 			break;
+			
+		case 10:
+			command = Command.CONECTADOS;
+			break;
 
 		default:
 			System.out.println("Opción no disponible");
@@ -481,6 +504,7 @@ public class MainClient {
 	private void showMenuManagement() {
 		System.out.println("\n\n1. Gestionar clientes");
 		System.out.println("2. Gestionar productos");
+		System.out.println("3. Ver clientes conectados");
 		System.out.println("0. Salir");
 	}
 	
@@ -493,6 +517,7 @@ public class MainClient {
 		System.out.println("5. Ver Total de Clientes");
 		System.out.println("6. Mostrar todos los clientes");
 		System.out.println("7. Volver");
+		System.out.println("10. Ver clientes conectados");
 		System.out.println("0. Salir");
 	}
 	
@@ -505,6 +530,7 @@ public class MainClient {
 		System.out.println("5. Ver Total de Producto");
 		System.out.println("6. Mostrar todos los Productos");
 		System.out.println("7. Volver");
+		System.out.println("10. Ver clientes conectados");
 		System.out.println("0. Salir");
 	}
 	
@@ -565,6 +591,14 @@ public class MainClient {
 	
 	public User getUser() {
 		return user;
+	}
+	
+	public void setKeepAliveThread(ClientKeepAliveThread keepAliveThread) {
+		this.keepAliveThread = keepAliveThread;
+	}
+	
+	public ClientKeepAliveThread getKeepAliveThread() {
+		return keepAliveThread;
 	}
 
 	public static void main(String[] args) {

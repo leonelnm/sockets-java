@@ -3,7 +3,9 @@ package edu.ucam.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -17,6 +19,7 @@ public class Server {
 	
 	private static Map<Integer, Client> clients;
 	private static Map<Integer, Product> products;
+	private static List<ServerThread> connectedClients;
 	
 	public void ejecutar() {
 
@@ -27,6 +30,7 @@ public class Server {
 			while (true) {
 				Socket socket = serverSocket.accept();
 				ServerThread serverThread = new ServerThread(socket);
+				getConnectedClients().add(serverThread);
 				serverThread.start();
 			}
 
@@ -56,6 +60,16 @@ public class Server {
 		return clients;
 	}
 	
+	public static synchronized List<ServerThread> getConnectedClients() {
+		if(connectedClients == null) {
+			connectedClients = new ArrayList<>();
+		}
+		return connectedClients;
+	}
+	
+	public static synchronized void removeClient(ServerThread serverThread) {
+		getConnectedClients().removeIf(e -> e.getId() == serverThread.getId());
+	}
 	
 
 }

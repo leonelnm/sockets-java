@@ -21,6 +21,7 @@ public class ServerThread extends Thread {
 	private BufferedReader br;
 	private PrintWriter pw;
 	private User user;
+	private Socket keepAliveSocket;
 
 	public ServerThread(Socket socket) throws IOException {
 		logger.info("Client connected -> " + this.getId());
@@ -31,20 +32,31 @@ public class ServerThread extends Thread {
 
 	@Override
 	public void run() {
+		
+		// open keepAlive channel
+		KeepAliveThread keepAliveThread = new KeepAliveThread(this);
+		keepAliveThread.start();
 
 		try {
 			IProtocolManagement protocol = new ProtocolManagement();
 			String readed = "";
 
 			while (((readed = br.readLine()) != null)) {
+				System.out.println("IN  ("+ this.getId() +") <- " + readed);
 				if(isExit(readed)) {
-					protocol.sendMessage(Messages.OK, readed, Messages.COD_OK, "Bye", pw);				
+					protocol.sendMessage(Messages.OK, readed, Messages.COD_OK, "Bye", pw);	
+					
+				}else if(Command.CONECTADOS.name().equals(readed)) {
+					pw.println(Server.getConnectedClients().size());
+					pw.flush();
+					
 				}else {
 					protocol.executeProtocol(this.user, readed, this);
 				}
 			}
 			
 			logger.info("Client disconnected -> " + this.getId());
+			Server.removeClient(this);
 
 		} catch (IOException e) {
 			logger.severe(e.getMessage());
@@ -66,6 +78,12 @@ public class ServerThread extends Thread {
 		this.br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		this.pw = new PrintWriter(socket.getOutputStream());
 	}
+	
+	public void closeAll() throws IOException{
+		this.br.close();
+		this.pw.close();
+		this.socket.close();
+	}
 
 	public BufferedReader getBr() {
 		return br;
@@ -75,12 +93,20 @@ public class ServerThread extends Thread {
 		return pw;
 	}
 	
-	public Socket getSocket() {
+	public Socket getCommandSocket() {
 		return socket;
 	}
 	
 	public User getUser() {
 		return user;
+	}
+	
+	public Socket getKeepAliveSocket() {
+		return keepAliveSocket;
+	}
+	
+	public void setKeepAliveSocket(Socket socket) {
+		this.keepAliveSocket = socket;
 	}
 
 }

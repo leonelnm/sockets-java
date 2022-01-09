@@ -8,6 +8,7 @@ public class PortsUtils {
 	private PortsUtils() {}
 	
 	public static final int COMMAND_PORT = 2022;
+	public static final int KEEPALIVE_PORT = 2021;
 	
 	public static synchronized int getAvailableDataPort() {
 		int dataPort = COMMAND_PORT +1;
